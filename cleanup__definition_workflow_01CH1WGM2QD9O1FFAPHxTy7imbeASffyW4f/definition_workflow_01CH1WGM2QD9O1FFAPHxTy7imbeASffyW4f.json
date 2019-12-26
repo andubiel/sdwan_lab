@@ -1,0 +1,92 @@
+{
+  "workflow": {
+    "unique_name": "definition_workflow_01CH1WGM2QD9O1FFAPHxTy7imbeASffyW4f",
+    "name": "Cleanup Remote Edge ",
+    "title": "Cleanup Remote Edge ",
+    "type": "generic.workflow",
+    "base_type": "workflow",
+    "variables": null,
+    "properties": {
+      "atomic": {
+        "is_atomic": false
+      },
+      "delete_workflow_instance": false,
+      "display_name": "Cleanup Remote Edge ",
+      "runtime_user": {
+        "override_target_runtime_user": false,
+        "specify_on_workflow_start": false,
+        "target_default": true
+      },
+      "target": {
+        "target_type": "terminal.endpoint",
+        "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm",
+        "execute_on_workflow_target": true
+      }
+    },
+    "object_type": "definition_workflow",
+    "actions": [
+      {
+        "unique_name": "definition_activity_01CH1XPTYQLJP2o0mhKE8xPJ4Qjuj52I0mq",
+        "name": "Execute Terminal Command(s)",
+        "title": "Cleanup",
+        "type": "terminal.command",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "command_timeout": 60,
+          "commands": "python3.7 sdwan.py attach --template abdc9abb-8c89-4fd5-8a0a-796e685a70c5 --target 16a96fc8-93f0-e5a9-deb0-71b8c132f316 --hostname vedge-remote --sysip 192.168.255.14  --siteid 2\n",
+          "continue_on_failure": false,
+          "display_name": "Cleanup",
+          "merge_commands": false,
+          "runtime_user": {
+            "override_target_runtime_user": false,
+            "target_default": true
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": false,
+            "override_workflow_target_group_criteria": false,
+            "use_workflow_target": true,
+            "use_workflow_target_group": false
+          }
+        },
+        "object_type": "definition_activity"
+      }
+    ],
+    "categories": [
+      "category_1BMfMXSnJMyt5Ihqi7rWJr5N8cf"
+    ]
+  },
+  "targets": {
+    "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm": {
+      "unique_name": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm",
+      "name": "DevBox",
+      "title": "DevBox",
+      "type": "terminal.endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "default_runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM",
+        "display_name": "DevBox",
+        "host": "0.tcp.ngrok.io",
+        "port": 15253,
+        "protocol": "ssh"
+      }
+    }
+  },
+  "runtime_users": {
+    "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM": {
+      "unique_name": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM",
+      "name": "TerminalPass",
+      "title": "TerminalPass",
+      "type": "runtime_user.terminal_password_credentials",
+      "base_type": "runtime_user",
+      "object_type": "definition_runtime_user",
+      "properties": {
+        "display_name": "TerminalPass",
+        "password": "*****",
+        "user": "*****"
+      }
+    }
+  }
+}

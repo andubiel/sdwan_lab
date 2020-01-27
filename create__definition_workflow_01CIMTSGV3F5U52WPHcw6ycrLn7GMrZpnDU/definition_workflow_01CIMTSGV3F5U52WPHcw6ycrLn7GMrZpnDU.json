@@ -40,7 +40,6 @@
           "display_name": "Python for vManage",
           "merge_commands": false,
           "runtime_user": {
-            "override_target_runtime_user": false,
             "target_default": true
           },
           "skip_execution": false,
@@ -50,6 +49,115 @@
           }
         },
         "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01CNTZHM8C9625EKwBDg91NoY8PEDVYgQ4D",
+        "name": "Condition Block",
+        "title": "Run Job",
+        "type": "logic.if_else",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Run Job",
+          "skip_execution": false
+        },
+        "object_type": "definition_activity",
+        "blocks": [
+          {
+            "unique_name": "definition_activity_01CNTZHSNM69R6ehn1LimJe6atgQU459VVg",
+            "name": "Condition Branch",
+            "title": "Sucess",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01CIMTY9XV8KB6mFXocZz3080e73E3WtLX8.output.succeeded$",
+                "operator": "eq",
+                "right_operand": true
+              },
+              "continue_on_failure": false,
+              "description": "Run Suceeded",
+              "display_name": "Sucess",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01CNU0ZF080RM7HXJs4duq3pxEb6Y4Y4gtf",
+                "name": "Send Email",
+                "title": "Send Email",
+                "type": "email.smtp_send_email",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "body": "Clus-Test Action Orchestrator Suceeded to configure vManage ACL",
+                  "continue_on_failure": false,
+                  "display_name": "Send Email",
+                  "from": "dubielt@me.com",
+                  "runtime_user": {
+                    "override_target_runtime_user": true,
+                    "runtime_user_id": "definition_runtime_user_01AHHYDD7UMCX0WRi4NJFnbH5SFIXsJ0Srg"
+                  },
+                  "skip_execution": false,
+                  "subject": "Clus-Test Action Orchestrator Suceeded",
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01ASGIR78AJB01HJYU6wbUplWRo0722qaJ3"
+                  },
+                  "to": "andubiel.bxz4b1@zapiermail.com"
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          },
+          {
+            "unique_name": "definition_activity_01CNTZHW02TNB3ea0TgioK9Zr5R1VJ8OBtd",
+            "name": "Condition Branch",
+            "title": "Failed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01CIMTY9XV8KB6mFXocZz3080e73E3WtLX8.output.succeeded$",
+                "operator": "eq",
+                "right_operand": false
+              },
+              "continue_on_failure": false,
+              "description": "Action Orchestrator Run Failed",
+              "display_name": "Failed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01CNU56QS6L2V3N0JocYORuD56eO2BxwH2w",
+                "name": "Send Email",
+                "title": "Send Email",
+                "type": "email.smtp_send_email",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "body": "Clus-Test Action Orchestrator Failed to configure vManage ACL",
+                  "continue_on_failure": false,
+                  "display_name": "Send Email",
+                  "from": "dubielt@me.com",
+                  "runtime_user": {
+                    "override_target_runtime_user": true,
+                    "runtime_user_id": "definition_runtime_user_01AHHYDD7UMCX0WRi4NJFnbH5SFIXsJ0Srg"
+                  },
+                  "skip_execution": false,
+                  "subject": "Clus-Test Action Orchestrator Failed",
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01ASGIR78AJB01HJYU6wbUplWRo0722qaJ3"
+                  },
+                  "to": "andubiel.bxz4b1@zapiermail.com"
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          }
+        ]
       }
     ],
     "categories": [
@@ -57,6 +165,21 @@
     ]
   },
   "targets": {
+    "definition_target_01ASGIR78AJB01HJYU6wbUplWRo0722qaJ3": {
+      "unique_name": "definition_target_01ASGIR78AJB01HJYU6wbUplWRo0722qaJ3",
+      "name": "SMTP",
+      "title": "SMTP",
+      "type": "email.smtp_endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "display_name": "SMTP",
+        "no_runtime_user": true,
+        "port": 465,
+        "protocol": "SMTP",
+        "server": "smtp.sendgrid.net"
+      }
+    },
     "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm": {
       "unique_name": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm",
       "name": "DevBox",
@@ -68,12 +191,25 @@
         "default_runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM",
         "display_name": "DevBox",
         "host": "0.tcp.ngrok.io",
-        "port": 15253,
+        "port": 15729,
         "protocol": "ssh"
       }
     }
   },
   "runtime_users": {
+    "definition_runtime_user_01AHHYDD7UMCX0WRi4NJFnbH5SFIXsJ0Srg": {
+      "unique_name": "definition_runtime_user_01AHHYDD7UMCX0WRi4NJFnbH5SFIXsJ0Srg",
+      "name": "tdubiel",
+      "title": "tdubiel",
+      "type": "runtime_user.email_credentials",
+      "base_type": "runtime_user",
+      "object_type": "definition_runtime_user",
+      "properties": {
+        "display_name": "tdubiel",
+        "password": "*****",
+        "sender": "*****"
+      }
+    },
     "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM": {
       "unique_name": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM",
       "name": "TerminalPass",

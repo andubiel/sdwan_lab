@@ -26,9 +26,34 @@
     "object_type": "definition_workflow",
     "actions": [
       {
+        "unique_name": "definition_activity_01D1JAIA5PPLI0LgNKv7IMuaamOk21ALBKJ",
+        "name": "Execute Terminal Command(s)",
+        "title": "Cleanup NSO",
+        "type": "terminal.command",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "command_timeout": 60,
+          "commands": "switch cli\nconfig\nno vxlan-tenant *\ncommit\ndevices sync-to\n\n\n\n",
+          "continue_on_failure": false,
+          "display_name": "Cleanup NSO",
+          "merge_commands": false,
+          "runtime_user": {
+            "override_target_runtime_user": true,
+            "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01CM6ATT16RKH6SNeL7NqKdBe1kQQL39k6Y"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
         "unique_name": "definition_activity_01CH1XPTYQLJP2o0mhKE8xPJ4Qjuj52I0mq",
         "name": "Execute Terminal Command(s)",
-        "title": "Cleanup",
+        "title": "Cleanup VManage",
         "type": "terminal.command",
         "base_type": "activity",
         "properties": {
@@ -36,7 +61,7 @@
           "command_timeout": 60,
           "commands": "python3.7 sdwan.py attach --template abdc9abb-8c89-4fd5-8a0a-796e685a70c5 --target 16a96fc8-93f0-e5a9-deb0-71b8c132f316 --hostname vedge-remote --sysip 192.168.255.14  --siteid 2\n",
           "continue_on_failure": false,
-          "display_name": "Cleanup",
+          "display_name": "Cleanup VManage",
           "merge_commands": false,
           "runtime_user": {
             "override_target_runtime_user": false,
@@ -44,13 +69,118 @@
           },
           "skip_execution": false,
           "target": {
-            "override_workflow_target": false,
-            "override_workflow_target_group_criteria": false,
-            "use_workflow_target": true,
-            "use_workflow_target_group": false
+            "override_workflow_target": true,
+            "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
           }
         },
         "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01CPJ0SHFBYDO4keBzCusP8E0cwTtcIItMX",
+        "name": "Condition Block",
+        "title": "Cleanup",
+        "type": "logic.if_else",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Cleanup",
+          "skip_execution": false
+        },
+        "object_type": "definition_activity",
+        "blocks": [
+          {
+            "unique_name": "definition_activity_01CPJ0SNICO040X2jU1tRgKvuGK764a7k6b",
+            "name": "Condition Branch",
+            "title": "Success",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01CH1XPTYQLJP2o0mhKE8xPJ4Qjuj52I0mq.output.succeeded$",
+                "operator": "eq",
+                "right_operand": true
+              },
+              "continue_on_failure": false,
+              "display_name": "Success",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01CPJ1IGS9AGS0M9UZTb0ZUBgGeLxIviqt0",
+                "name": "Send Email",
+                "title": "Sucess Email",
+                "type": "email.smtp_send_email",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "body": "Clus-Test Cleanup Suceeded",
+                  "continue_on_failure": false,
+                  "display_name": "Sucess Email",
+                  "from": "dubielt@me.com",
+                  "runtime_user": {
+                    "override_target_runtime_user": true,
+                    "runtime_user_id": "definition_runtime_user_01AHHYDD7UMCX0WRi4NJFnbH5SFIXsJ0Srg"
+                  },
+                  "skip_execution": false,
+                  "subject": "Clus-Test Cleanup Suceeded",
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01ASGIR78AJB01HJYU6wbUplWRo0722qaJ3"
+                  },
+                  "to": "andubiel.bxz4b1@zapiermail.com"
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          },
+          {
+            "unique_name": "definition_activity_01CPJ0SQRM5B25dINHomPzDoTCo8Q9QyAGB",
+            "name": "Condition Branch",
+            "title": "Condition Branch",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01CH1XPTYQLJP2o0mhKE8xPJ4Qjuj52I0mq.output.succeeded$",
+                "operator": "eq",
+                "right_operand": false
+              },
+              "continue_on_failure": false,
+              "display_name": "Condition Branch",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01CPJ54YACUPN3htP9x0nqCDzB0o39cSxLt",
+                "name": "Send Email",
+                "title": "Fail Email",
+                "type": "email.smtp_send_email",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "body": "Clus-Test Cleanup Failed",
+                  "continue_on_failure": false,
+                  "display_name": "Fail Email",
+                  "from": "dubielt@me.com",
+                  "runtime_user": {
+                    "override_target_runtime_user": true,
+                    "runtime_user_id": "definition_runtime_user_01AHHYDD7UMCX0WRi4NJFnbH5SFIXsJ0Srg"
+                  },
+                  "skip_execution": false,
+                  "subject": "Clus-Test Cleanup Failed",
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01ASGIR78AJB01HJYU6wbUplWRo0722qaJ3"
+                  },
+                  "to": "andubiel.bxz4b1@zapiermail.com"
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          }
+        ]
       }
     ],
     "categories": [
@@ -58,6 +188,21 @@
     ]
   },
   "targets": {
+    "definition_target_01ASGIR78AJB01HJYU6wbUplWRo0722qaJ3": {
+      "unique_name": "definition_target_01ASGIR78AJB01HJYU6wbUplWRo0722qaJ3",
+      "name": "SMTP",
+      "title": "SMTP",
+      "type": "email.smtp_endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "display_name": "SMTP",
+        "no_runtime_user": true,
+        "port": 465,
+        "protocol": "SMTP",
+        "server": "smtp.sendgrid.net"
+      }
+    },
     "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm": {
       "unique_name": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm",
       "name": "DevBox",
@@ -69,12 +214,40 @@
         "default_runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM",
         "display_name": "DevBox",
         "host": "0.tcp.ngrok.io",
-        "port": 15253,
+        "port": 15729,
+        "protocol": "ssh"
+      }
+    },
+    "definition_target_01CM6ATT16RKH6SNeL7NqKdBe1kQQL39k6Y": {
+      "unique_name": "definition_target_01CM6ATT16RKH6SNeL7NqKdBe1kQQL39k6Y",
+      "name": "DevBox2",
+      "title": "DevBox2",
+      "type": "terminal.endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "default_runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM",
+        "display_name": "DevBox2",
+        "host": "0.tcp.ngrok.io",
+        "port": 11075,
         "protocol": "ssh"
       }
     }
   },
   "runtime_users": {
+    "definition_runtime_user_01AHHYDD7UMCX0WRi4NJFnbH5SFIXsJ0Srg": {
+      "unique_name": "definition_runtime_user_01AHHYDD7UMCX0WRi4NJFnbH5SFIXsJ0Srg",
+      "name": "tdubiel",
+      "title": "tdubiel",
+      "type": "runtime_user.email_credentials",
+      "base_type": "runtime_user",
+      "object_type": "definition_runtime_user",
+      "properties": {
+        "display_name": "tdubiel",
+        "password": "*****",
+        "sender": "*****"
+      }
+    },
     "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM": {
       "unique_name": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM",
       "name": "TerminalPass",

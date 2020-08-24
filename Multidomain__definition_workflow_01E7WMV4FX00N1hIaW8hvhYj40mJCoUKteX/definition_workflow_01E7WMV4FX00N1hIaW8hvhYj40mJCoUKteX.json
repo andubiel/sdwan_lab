@@ -1,0 +1,1549 @@
+{
+  "workflow": {
+    "unique_name": "definition_workflow_01E7WMV4FX00N1hIaW8hvhYj40mJCoUKteX",
+    "name": "Multi-Domain-VXLAN-SDWAN",
+    "title": "Multi-Domain-VXLAN-SDWAN",
+    "type": "generic.workflow",
+    "base_type": "workflow",
+    "variables": [
+      {
+        "schema_id": "datatype.string",
+        "properties": {
+          "value": "result error",
+          "scope": "local",
+          "name": "failed",
+          "type": "datatype.string",
+          "is_required": false
+        },
+        "unique_name": "variable_workflow_01E8MS92RPLUN7657tF7NgNXDRviWCFUupv",
+        "object_type": "variable_workflow"
+      }
+    ],
+    "properties": {
+      "atomic": {
+        "is_atomic": false
+      },
+      "delete_workflow_instance": false,
+      "description": "Piipeline to automate vxlan tenant and remote SD-Wan access",
+      "display_name": "Multi-Domain-VXLAN-SDWAN",
+      "runtime_user": {
+        "override_target_runtime_user": false,
+        "specify_on_workflow_start": false,
+        "target_default": true
+      },
+      "target": {
+        "execute_on_target_group": false,
+        "execute_on_workflow_target": false,
+        "no_target": true,
+        "specify_on_workflow_start": false
+      }
+    },
+    "object_type": "definition_workflow",
+    "actions": [
+      {
+        "unique_name": "definition_activity_01GOL6BEG2OUE7YmofMtxwjiusDBkYJQ44Z",
+        "name": "Execute Terminal Command(s)",
+        "title": "Git Clone",
+        "type": "terminal.command",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "command_timeout": 60,
+          "commands": "rm -rf impact\ngit clone http://192.168.1.100:8090/tdub/impact.git\ncd impact\ngit checkout impact-test",
+          "continue_on_failure": false,
+          "display_name": "Git Clone",
+          "merge_commands": false,
+          "runtime_user": {
+            "override_target_runtime_user": true,
+            "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01GOPI71KKLLU43AZESZjd6qesaiHaSQWiv",
+        "name": "Execute Terminal Command(s)",
+        "title": "PyATS  [Pre-Change] Impact-Test ENV TEST",
+        "type": "terminal.command",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "command_timeout": 60,
+          "commands": "cd impact/tests\nrobot clus-test.robot\n",
+          "continue_on_failure": false,
+          "display_name": "PyATS  [Pre-Change] Impact-Test ENV TEST",
+          "merge_commands": false,
+          "runtime_user": {
+            "override_target_runtime_user": true,
+            "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01GOR1AIDCV8R1VcXnlD3ehkpQdxNVgKaHx",
+        "name": "Find String",
+        "title": "Find String",
+        "type": "core.find_string",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Find String",
+          "searched_string": "9 passed",
+          "skip_execution": false,
+          "source": "$activity.definition_activity_01GOPI71KKLLU43AZESZjd6qesaiHaSQWiv.output.response_body$"
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01GOR4BQHO3745zjk3JvhwiwU8i4aFLtAw8",
+        "name": "Condition Block",
+        "title": "Stage 1: Validate Env PyATS (Pre-Checks)",
+        "type": "logic.if_else",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Stage 1: Validate Env PyATS (Pre-Checks)",
+          "skip_execution": false
+        },
+        "object_type": "definition_activity",
+        "blocks": [
+          {
+            "unique_name": "definition_activity_01GOR4CK0VFVM6HaRQIizFAs5H5xyVZBAJB",
+            "name": "Condition Branch",
+            "title": "PyATS Passed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01GOR1AIDCV8R1VcXnlD3ehkpQdxNVgKaHx.output.has_match$",
+                "operator": "eq",
+                "right_operand": true
+              },
+              "continue_on_failure": false,
+              "display_name": "PyATS Passed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01GOR4DFED8AK16HssThmwJrj36adbx5rme",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\n  \"text\": \"PyATS Pre Test Completed Sucessfully\"\n}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          },
+          {
+            "unique_name": "definition_activity_01GOR4E28YLVI0lne1HM4hPbraBBjNJWCvM",
+            "name": "Condition Branch",
+            "title": "PyATS Failed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01GOR1AIDCV8R1VcXnlD3ehkpQdxNVgKaHx.output.has_match$",
+                "operator": "eq",
+                "right_operand": false
+              },
+              "continue_on_failure": false,
+              "display_name": "PyATS Failed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01GOR4EV8NQNN1qvqoTnojM1x453zfodvaj",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\"text\":\"PyATS Pre Test Failed\"}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01GOR4FOOADOR1K0SLdVlaHIam2auSwy59H",
+                "name": "Execute Terminal Command(s)",
+                "title": "Terminate Gitlab Pipeline",
+                "type": "terminal.command",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "command_timeout": 60,
+                  "commands": "sudo gitlab-runner stop\nsudo gitlab-runner start\n",
+                  "continue_on_failure": false,
+                  "display_name": "Terminate Gitlab Pipeline",
+                  "merge_commands": false,
+                  "runtime_user": {
+                    "override_target_runtime_user": true,
+                    "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+                  }
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01GP33B9AHR5H4NDj4KE0xaJeR3y9VSS80x",
+                "name": "Failed",
+                "title": "Completed",
+                "type": "logic.completed",
+                "base_type": "activity",
+                "properties": {
+                  "completion_type": "failed-completed",
+                  "display_name": "Failed"
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "unique_name": "definition_activity_01GOIK14CAK6K1HeGVWovaTXSkkiYSw9yDr",
+        "name": "Execute Terminal Command(s)",
+        "title": "Ansible Push",
+        "type": "terminal.command",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "command_timeout": 60,
+          "commands": "cd impact\nansible-playbook  action-orchestrator.yml\n\n",
+          "continue_on_failure": false,
+          "description": "\nAnsible YAML files  are Version Controlled for  Single Source of Truth for VXLAN/EVPN ",
+          "display_name": "Ansible Push",
+          "merge_commands": false,
+          "runtime_user": {
+            "override_target_runtime_user": true,
+            "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01GOJ6RTD5KT61WLDe4rQuU2o3y1Iqa378v",
+        "name": "Condition Block",
+        "title": "Stage 2 : Configuration",
+        "type": "logic.if_else",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Stage 2 : Configuration",
+          "skip_execution": false
+        },
+        "object_type": "definition_activity",
+        "blocks": [
+          {
+            "unique_name": "definition_activity_01GOJ6SJ14IGU2ScC1TrpuccObHGLroPBRb",
+            "name": "Condition Branch",
+            "title": "Ansible Passed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01GOIK14CAK6K1HeGVWovaTXSkkiYSw9yDr.output.response_body$",
+                "operator": "mregex",
+                "right_operand": "ok=[2-5]"
+              },
+              "continue_on_failure": false,
+              "display_name": "Ansible Passed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01GOPZZSBW2IG6Y4F4PabNhp0CMTYuhhtTP",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\n  \"text\": \"Ansible Config Pushed to AO completed Sucessfully\"\n}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          },
+          {
+            "unique_name": "definition_activity_01GOJ6T10CPAI1gQAcVMuBwWCBNdfoo3dJe",
+            "name": "Condition Branch",
+            "title": "Ansible Failed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01GOIK14CAK6K1HeGVWovaTXSkkiYSw9yDr.output.response_body$",
+                "operator": "mregex",
+                "right_operand": "failed=[1-5]"
+              },
+              "continue_on_failure": false,
+              "display_name": "Ansible Failed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01GOQ2CGCU2CX1eUKEl2BDS3PE3AtclcBTG",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\"text\":\"Ansible Push Failed\"}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01GP33NEDI97A7iaMVA7Kzp2460zVHW6DBI",
+                "name": "Execute Terminal Command(s)",
+                "title": "Terminate Gitlab Pipeline",
+                "type": "terminal.command",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "command_timeout": 60,
+                  "commands": "sudo gitlab-runner stop\nsudo gitlab-runner start\n",
+                  "continue_on_failure": false,
+                  "display_name": "Terminate Gitlab Pipeline",
+                  "merge_commands": false,
+                  "runtime_user": {
+                    "override_target_runtime_user": true,
+                    "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+                  }
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01GP36E46BOJX1N5UrFASNK6BGhc43DmmO9",
+                "name": "Failed",
+                "title": "Completed",
+                "type": "logic.completed",
+                "base_type": "activity",
+                "properties": {
+                  "completion_type": "failed-completed",
+                  "display_name": "Failed"
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "unique_name": "definition_activity_01GQ1R8L53XNX4WNNpUL9NEZbzxKYVKuQIJ",
+        "name": "Group",
+        "title": "Check NSO Device Snych",
+        "type": "logic.group",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Check NSO Device Snych",
+          "skip_execution": false
+        },
+        "object_type": "definition_activity",
+        "actions": [
+          {
+            "unique_name": "definition_activity_01GQ183CK44612PZe2SM6uPeQ9Sjel6ZB4M",
+            "name": "HTTP Request",
+            "title": "NSO Device Synch Check [$global.leaf1$]/",
+            "type": "web-service.http_request",
+            "base_type": "activity",
+            "properties": {
+              "accept": "application/vnd.yang.data+json, application/vnd.yang.api+json, application/vnd.yang.collection+json,application/vnd.yang.datastore+json",
+              "action_timeout": 180,
+              "allow_auto_redirect": true,
+              "content_type": "application/vnd.yang.data+xml",
+              "continue_on_error_status_code": false,
+              "continue_on_failure": false,
+              "display_name": "NSO Device Synch Check [$global.leaf1$]/",
+              "method": "POST",
+              "relative_url": "/api/running/devices/device/$global.variable_01GQ160Y6ONMX3w6REprpgTHYF5bDVkSxJc.global.variable_01GQ160Y6ONMX3w6REprpgTHYF5bDVkSxJc$/_operations/check-sync\n",
+              "runtime_user": {
+                "override_target_runtime_user": true,
+                "runtime_user_id": "definition_runtime_user_01GPGS7PG68ZZ7fDs8rJrC9HKMmqngs3fqh"
+              },
+              "skip_execution": false,
+              "target": {
+                "override_workflow_target": true,
+                "target_id": "definition_target_01GPGS9SDM8P74gl4zFlYJHLYOJKaoIcuC8"
+              }
+            },
+            "object_type": "definition_activity"
+          },
+          {
+            "unique_name": "definition_activity_01GQ1S79089SK0QhYzYEhyE62LPFlld24Zu",
+            "name": "HTTP Request",
+            "title": "NSO Device Synch Check [$global.leaf2$]/",
+            "type": "web-service.http_request",
+            "base_type": "activity",
+            "properties": {
+              "accept": "application/vnd.yang.data+json, application/vnd.yang.api+json, application/vnd.yang.collection+json,application/vnd.yang.datastore+json",
+              "action_timeout": 180,
+              "allow_auto_redirect": true,
+              "content_type": "application/vnd.yang.data+xml",
+              "continue_on_error_status_code": false,
+              "continue_on_failure": false,
+              "display_name": "NSO Device Synch Check [$global.leaf2$]/",
+              "method": "POST",
+              "relative_url": "/api/running/devices/device/$global.variable_01GQ16J0F0F9J6UADRU5kJr4HQ7eTjchavv.global.variable_01GQ16J0F0F9J6UADRU5kJr4HQ7eTjchavv$/_operations/check-sync\n",
+              "runtime_user": {
+                "override_target_runtime_user": true,
+                "runtime_user_id": "definition_runtime_user_01GPGS7PG68ZZ7fDs8rJrC9HKMmqngs3fqh"
+              },
+              "skip_execution": false,
+              "target": {
+                "override_workflow_target": true,
+                "target_id": "definition_target_01GPGS9SDM8P74gl4zFlYJHLYOJKaoIcuC8"
+              }
+            },
+            "object_type": "definition_activity"
+          },
+          {
+            "unique_name": "definition_activity_01GQ1S4XRKPPX6fqiJl5D65dyYQBQhPpOVy",
+            "name": "HTTP Request",
+            "title": "NSO Device Synch Check [$global.spine1$]/",
+            "type": "web-service.http_request",
+            "base_type": "activity",
+            "properties": {
+              "accept": "application/vnd.yang.data+json, application/vnd.yang.api+json, application/vnd.yang.collection+json,application/vnd.yang.datastore+json",
+              "action_timeout": 180,
+              "allow_auto_redirect": true,
+              "content_type": "application/vnd.yang.data+xml",
+              "continue_on_error_status_code": false,
+              "continue_on_failure": false,
+              "display_name": "NSO Device Synch Check [$global.spine1$]/",
+              "method": "POST",
+              "relative_url": "/api/running/devices/device/$global.variable_01GQ16VW3PSEI06pTCNS4wl2VjjngVy2fYF.global.variable_01GQ16VW3PSEI06pTCNS4wl2VjjngVy2fYF$/_operations/check-sync\n",
+              "runtime_user": {
+                "override_target_runtime_user": true,
+                "runtime_user_id": "definition_runtime_user_01GPGS7PG68ZZ7fDs8rJrC9HKMmqngs3fqh"
+              },
+              "skip_execution": false,
+              "target": {
+                "override_workflow_target": true,
+                "target_id": "definition_target_01GPGS9SDM8P74gl4zFlYJHLYOJKaoIcuC8"
+              }
+            },
+            "object_type": "definition_activity"
+          },
+          {
+            "unique_name": "definition_activity_01GQ1S1JBSMDP6wdJlPkOuTxn3oTYUhairA",
+            "name": "HTTP Request",
+            "title": "NSO Device Synch Check [$global.spine2$]/",
+            "type": "web-service.http_request",
+            "base_type": "activity",
+            "properties": {
+              "accept": "application/vnd.yang.data+json, application/vnd.yang.api+json, application/vnd.yang.collection+json,application/vnd.yang.datastore+json",
+              "action_timeout": 180,
+              "allow_auto_redirect": true,
+              "content_type": "application/vnd.yang.data+xml",
+              "continue_on_error_status_code": false,
+              "continue_on_failure": false,
+              "display_name": "NSO Device Synch Check [$global.spine2$]/",
+              "method": "POST",
+              "relative_url": "/api/running/devices/device/$global.variable_01GQ179A186V006rcaVLmSsPoDeWvhMXZBI.global.variable_01GQ179A186V006rcaVLmSsPoDeWvhMXZBI$/_operations/check-sync\n",
+              "runtime_user": {
+                "override_target_runtime_user": true,
+                "runtime_user_id": "definition_runtime_user_01GPGS7PG68ZZ7fDs8rJrC9HKMmqngs3fqh"
+              },
+              "skip_execution": false,
+              "target": {
+                "override_workflow_target": true,
+                "target_id": "definition_target_01GPGS9SDM8P74gl4zFlYJHLYOJKaoIcuC8"
+              }
+            },
+            "object_type": "definition_activity"
+          }
+        ]
+      },
+      {
+        "unique_name": "definition_activity_01GQ2368GASE01wtCNm2U1JjAVaW9vR0cT5",
+        "name": "Condition Block",
+        "title": "STAGE 3: Pre-Change Check",
+        "type": "logic.if_else",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "STAGE 3: Pre-Change Check",
+          "skip_execution": false
+        },
+        "object_type": "definition_activity",
+        "blocks": [
+          {
+            "unique_name": "definition_activity_01GQ236P0399L6WpNTNWog4VvNtOWhPWQYy",
+            "name": "Condition Branch",
+            "title": "Pre-Check Passed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": {
+                  "left_operand": {
+                    "left_operand": {
+                      "left_operand": "$activity.definition_activity_01GQ183CK44612PZe2SM6uPeQ9Sjel6ZB4M.output.response_body$",
+                      "operator": "mregex",
+                      "right_operand": "in-sync"
+                    },
+                    "operator": "and",
+                    "right_operand": {
+                      "left_operand": "$activity.definition_activity_01GQ1S79089SK0QhYzYEhyE62LPFlld24Zu.output.response_body$",
+                      "operator": "mregex",
+                      "right_operand": "in-sync"
+                    }
+                  },
+                  "operator": "and",
+                  "right_operand": {
+                    "left_operand": "$activity.definition_activity_01GQ1S4XRKPPX6fqiJl5D65dyYQBQhPpOVy.output.response_body$",
+                    "operator": "mregex",
+                    "right_operand": "in-sync"
+                  }
+                },
+                "operator": "and",
+                "right_operand": {
+                  "left_operand": "$activity.definition_activity_01GQ1S1JBSMDP6wdJlPkOuTxn3oTYUhairA.output.response_body$",
+                  "operator": "mregex",
+                  "right_operand": "in-sync"
+                }
+              },
+              "continue_on_failure": false,
+              "display_name": "Pre-Check Passed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01GQ237264KES2ba1MS4KTb631FuqITFRSi",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\n  \"text\": \"NXOS Device Sync completed Sucessfully\"\n}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          },
+          {
+            "unique_name": "definition_activity_01GQ237IA3VW1562unxYLJSAQd2BpR4hZw9",
+            "name": "Condition Branch",
+            "title": "Pre-Check Failed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": {
+                  "left_operand": {
+                    "left_operand": {
+                      "left_operand": "$activity.definition_activity_01GQ183CK44612PZe2SM6uPeQ9Sjel6ZB4M.output.response_body$",
+                      "operator": "mregex",
+                      "right_operand": ""
+                    },
+                    "operator": "or",
+                    "right_operand": {
+                      "left_operand": "$activity.definition_activity_01GQ1S79089SK0QhYzYEhyE62LPFlld24Zu.output.response_body$",
+                      "operator": "mregex",
+                      "right_operand": "error"
+                    }
+                  },
+                  "operator": "and",
+                  "right_operand": {
+                    "left_operand": "$activity.definition_activity_01GQ1S4XRKPPX6fqiJl5D65dyYQBQhPpOVy.output.response_body$",
+                    "operator": "mregex",
+                    "right_operand": "error"
+                  }
+                },
+                "operator": "and",
+                "right_operand": {
+                  "left_operand": "$activity.definition_activity_01GQ1S1JBSMDP6wdJlPkOuTxn3oTYUhairA.output.response_body$",
+                  "operator": "mregex",
+                  "right_operand": "error"
+                }
+              },
+              "continue_on_failure": false,
+              "display_name": "Pre-Check Failed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01GQ237T5IOIT3pPdK9msq7BPvg3L70IuRy",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\"text\":\"NXOS Device Sync Failed\"}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01GQ2380B5P1I4wMg9BF1tzLFxxWBmj16fI",
+                "name": "Execute Terminal Command(s)",
+                "title": "Terminate Gitlab Pipeline",
+                "type": "terminal.command",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "command_timeout": 60,
+                  "commands": "sudo gitlab-runner stop\nsudo gitlab-runner start\n",
+                  "continue_on_failure": false,
+                  "display_name": "Terminate Gitlab Pipeline",
+                  "merge_commands": false,
+                  "runtime_user": {
+                    "override_target_runtime_user": true,
+                    "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+                  }
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01GQ2385NJBE2150Vh9j6tOayydowoGCPI5",
+                "name": "Failed",
+                "title": "Completed",
+                "type": "logic.completed",
+                "base_type": "activity",
+                "properties": {
+                  "completion_type": "failed-completed",
+                  "display_name": "Failed"
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "unique_name": "definition_activity_01E7WOL83S7Z77BaPeFkPXkyBDdzhWK051C",
+        "name": "Execute Terminal Command(s)",
+        "title": "Apply Config to NSO VXLAN SERVICE ",
+        "type": "terminal.command",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "command_timeout": 60,
+          "commands": "switch cli\nconfig\nvxlan-tenant $env.variable_01E8MAX5M79KQ1neCpIPGn6mdsMEDaPhlHX.env.variable_01E8MAX5M79KQ1neCpIPGn6mdsMEDaPhlHX$ fabric fabric1\nsegments test network $env.variable_01E8OE2XVJYL96UFMltNYv4K5TiRmjmikQ3.env.variable_01E8OE2XVJYL96UFMltNYv4K5TiRmjmikQ3$\nsegments test suppress-arp true\nsegments test connection leaf1 $env.variable_01E8OHUSVRF8I5EuR3GksC6wZosoa8xIwK5.env.variable_01E8OHUSVRF8I5EuR3GksC6wZosoa8xIwK5$\nsegments test connection leaf2 $env.variable_01E8OI8M6NNBC0KbVkdvTek1Mm1G2ozKDP3.env.variable_01E8OI8M6NNBC0KbVkdvTek1Mm1G2ozKDP3$\ncommit\n\n\n\n\n",
+          "continue_on_failure": false,
+          "description": "Apply Configuration",
+          "display_name": "Apply Config to NSO VXLAN SERVICE ",
+          "merge_commands": false,
+          "runtime_user": {
+            "override_target_runtime_user": true,
+            "runtime_user_id": "definition_runtime_user_01E87AOP2OBJE49oY8r2QpHFaImKXh7nNOf"
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01CM6ATT16RKH6SNeL7NqKdBe1kQQL39k6Y"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01E9NW5H5ZE505dMT8aK93iveqGIot2Qu23",
+        "name": "Sleep",
+        "title": "Sleep",
+        "type": "core.sleep",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Sleep",
+          "skip_execution": false,
+          "sleep_interval": 2
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01E8W2SXPY1340HTEB52AiSxrCt3Hz8L0Ac",
+        "name": "Execute Terminal Command(s)",
+        "title": "Post Check VXLAN Tenant Sync Check",
+        "type": "terminal.command",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "command_timeout": 60,
+          "commands": "switch cli\nvxlan-tenant $env.variable_01E8MAX5M79KQ1neCpIPGn6mdsMEDaPhlHX.env.variable_01E8MAX5M79KQ1neCpIPGn6mdsMEDaPhlHX$ check-sync",
+          "continue_on_failure": false,
+          "display_name": "Post Check VXLAN Tenant Sync Check",
+          "merge_commands": false,
+          "runtime_user": {
+            "override_target_runtime_user": true,
+            "runtime_user_id": "definition_runtime_user_01E87AOP2OBJE49oY8r2QpHFaImKXh7nNOf"
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01CM6ATT16RKH6SNeL7NqKdBe1kQQL39k6Y"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01E9TUSEWJ1HW3lWWAEP8TAOqt84kk6E5ZA",
+        "name": "Condition Block",
+        "title": "Stage 4: Build",
+        "type": "logic.if_else",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Stage 4: Build",
+          "skip_execution": false
+        },
+        "object_type": "definition_activity",
+        "blocks": [
+          {
+            "unique_name": "definition_activity_01E9TUSLG0QT353lLkz18L4PeMIzK9tftc6",
+            "name": "Condition Branch",
+            "title": "Build-Check Pass",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01E8W2SXPY1340HTEB52AiSxrCt3Hz8L0Ac.output.response_body$",
+                "operator": "mregex",
+                "right_operand": "in-sync true"
+              },
+              "continue_on_failure": false,
+              "display_name": "Build-Check Pass",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01E9TUSPAI88D5JxK1sPmDgbXOvgomEJMIO",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\"text\":\"VXLAN Tenant build completed Sucessfully for $env.variable_01E8MAX5M79KQ1neCpIPGn6mdsMEDaPhlHX.env.variable_01E8MAX5M79KQ1neCpIPGn6mdsMEDaPhlHX$\"}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          },
+          {
+            "unique_name": "definition_activity_01E9TUSTL399S71Mx0edarvTv3eMYJvCru8",
+            "name": "Condition Branch",
+            "title": "Build-Check Failed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01E8W2SXPY1340HTEB52AiSxrCt3Hz8L0Ac.output.response_body$",
+                "operator": "mregex",
+                "right_operand": "error"
+              },
+              "continue_on_failure": false,
+              "display_name": "Build-Check Failed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01E9TUT1WVPH31ynIEVShydxjR9JGAV2PTX",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\"text\":\"VXLAN Tenant Build Failed for $env.variable_01E8MAX5M79KQ1neCpIPGn6mdsMEDaPhlHX.env.variable_01E8MAX5M79KQ1neCpIPGn6mdsMEDaPhlHX$\"}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01EO4W6SCABDT1u6x1v5CEeLy4xNVdi3BqW",
+                "name": "Execute Terminal Command(s)",
+                "title": "Terminate Gitlab Pipeline",
+                "type": "terminal.command",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "command_timeout": 60,
+                  "commands": "sudo gitlab-runner stop\nsudo gitlab-runner start\n",
+                  "continue_on_failure": false,
+                  "display_name": "Terminate Gitlab Pipeline",
+                  "merge_commands": false,
+                  "runtime_user": {
+                    "override_target_runtime_user": true,
+                    "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+                  }
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01GP360UBMVPT627UpMu0SWUgSUxiF6ab7a",
+                "name": "Failed",
+                "title": "Completed",
+                "type": "logic.completed",
+                "base_type": "activity",
+                "properties": {
+                  "completion_type": "failed-completed",
+                  "display_name": "Failed"
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "unique_name": "definition_activity_01GOR7TJ3J6PB5H7ootMlZoUYoVq1bMzHgy",
+        "name": "Execute Terminal Command(s)",
+        "title": "PyATS  [Post-Change] Impact-Test ENV TEST",
+        "type": "terminal.command",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "command_timeout": 60,
+          "commands": "cd impact/tests\nrobot clus-test.robot\n",
+          "continue_on_failure": false,
+          "display_name": "PyATS  [Post-Change] Impact-Test ENV TEST",
+          "merge_commands": false,
+          "runtime_user": {
+            "override_target_runtime_user": true,
+            "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01GOR799WH6LZ3hGyg1XwMHF7lbOv5Ub088",
+        "name": "Find String",
+        "title": "Find String",
+        "type": "core.find_string",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Find String",
+          "searched_string": "9 passed",
+          "skip_execution": false,
+          "source": "$activity.definition_activity_01GOR7TJ3J6PB5H7ootMlZoUYoVq1bMzHgy.output.response_body$"
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01GOQ9WA4G8D96gjNJK0GbfpCrpHerXrwhx",
+        "name": "Condition Block",
+        "title": "Stage 5: Validate Env PyATS (Post-Checks)",
+        "type": "logic.if_else",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Stage 5: Validate Env PyATS (Post-Checks)",
+          "skip_execution": false
+        },
+        "object_type": "definition_activity",
+        "blocks": [
+          {
+            "unique_name": "definition_activity_01GOQ9WZ9GY5V1dUQofVuTn8NXZOSI1yU5R",
+            "name": "Condition Branch",
+            "title": "PyATS Passed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01GOR799WH6LZ3hGyg1XwMHF7lbOv5Ub088.output.has_match$",
+                "operator": "eq",
+                "right_operand": true
+              },
+              "continue_on_failure": false,
+              "display_name": "PyATS Passed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01GOQ9XMTSMN50ASGAjKS1ef0XxlQkJ61Jw",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\n  \"text\": \"PyATS Post Test Completed Sucessfully\"\n}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          },
+          {
+            "unique_name": "definition_activity_01GOQ9Y62GIMB1WcY77mZ8fa7x2Rc5127Fm",
+            "name": "Condition Branch",
+            "title": "PyATS Failed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01GOR799WH6LZ3hGyg1XwMHF7lbOv5Ub088.output.has_match$",
+                "operator": "eq",
+                "right_operand": false
+              },
+              "continue_on_failure": false,
+              "display_name": "PyATS Failed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01GOQ9YMRMDJP6q5EBQSUYVRxwO6CRyRgTm",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\"text\":\"PyATS Post Test Failed\"}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01GOQ9YXXXV8B4Tvfk8MoSEyagJYySeOEs2",
+                "name": "Execute Terminal Command(s)",
+                "title": "Terminate Gitlab Pipeline",
+                "type": "terminal.command",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "command_timeout": 60,
+                  "commands": "sudo gitlab-runner stop\nsudo gitlab-runner start\n",
+                  "continue_on_failure": false,
+                  "display_name": "Terminate Gitlab Pipeline",
+                  "merge_commands": false,
+                  "runtime_user": {
+                    "override_target_runtime_user": true,
+                    "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+                  }
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "unique_name": "definition_activity_01HT5CY2UCEL77BUPS3QdUnfcDd1sRO2yKc",
+        "name": "Execute Terminal Command(s)",
+        "title": "Deploy Remote Access Template for SD-WAN",
+        "type": "terminal.command",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "command_timeout": 60,
+          "commands": "python3.7 sdwan.py attach --template aa8bdc21-2a20-4ec0-b8ac-2fa0bd07aec4 --target 16a96fc8-93f0-e5a9-deb0-71b8c132f316 --hostname vedge-remote --sysip 192.168.255.14 --siteid 2",
+          "continue_on_failure": false,
+          "display_name": "Deploy Remote Access Template for SD-WAN",
+          "merge_commands": false,
+          "runtime_user": {
+            "override_target_runtime_user": true,
+            "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01HWK9NGU3HC53CkWShABpgPGXwXxS11Onb",
+        "name": "Execute Terminal Command(s)",
+        "title": "Validate Template",
+        "type": "terminal.command",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "command_timeout": 60,
+          "commands": "python sdwan.py attached-devices --template aa8bdc21-2a20-4ec0-b8ac-2fa0bd07aec4",
+          "continue_on_failure": false,
+          "display_name": "Validate Template",
+          "merge_commands": true,
+          "runtime_user": {
+            "override_target_runtime_user": true,
+            "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01HWL0Z96EY1E5ZKT5W63lck5zBbqE5gj7u",
+        "name": "Find String",
+        "title": "Find String",
+        "type": "core.find_string",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Find String",
+          "searched_string": "192.168.255.14",
+          "skip_execution": false,
+          "source": "$activity.definition_activity_01HWK9NGU3HC53CkWShABpgPGXwXxS11Onb.output.response_body$"
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01HWL13X7K5CZ3RXuxV7C9YaveoK4QGEA7M",
+        "name": "Condition Block",
+        "title": "Stage 6: Validate vManage SD-WAN Template",
+        "type": "logic.if_else",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Stage 6: Validate vManage SD-WAN Template",
+          "skip_execution": false
+        },
+        "object_type": "definition_activity",
+        "blocks": [
+          {
+            "unique_name": "definition_activity_01HWL14IEJBOA34mBppCRHj5SOihkltbpbs",
+            "name": "Condition Branch",
+            "title": "PyATS Passed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01GOR799WH6LZ3hGyg1XwMHF7lbOv5Ub088.output.has_match$",
+                "operator": "eq",
+                "right_operand": true
+              },
+              "continue_on_failure": false,
+              "display_name": "PyATS Passed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01HWL14YFD93M2YiHfs6LFJYlxRzfhO6qXV",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\n  \"text\": \"VMange Template (DC-accept) Applied Sucessfully\"\n}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          },
+          {
+            "unique_name": "definition_activity_01HWL158KQWW33wuTZwGwV1xPNB1WBEF3sv",
+            "name": "Condition Branch",
+            "title": "PyATS Failed",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01GOR799WH6LZ3hGyg1XwMHF7lbOv5Ub088.output.has_match$",
+                "operator": "eq",
+                "right_operand": false
+              },
+              "continue_on_failure": false,
+              "display_name": "PyATS Failed",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01HWL15IKSPDC2VYTB2CPNf6xXL30CCH9aS",
+                "name": "HTTP Request",
+                "title": "Chat OPs Notification",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "body": "{\"text\":\"VMange Template (DC-accept) Applied Failed\"}",
+                  "content_type": "application/json",
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Chat OPs Notification",
+                  "method": "POST",
+                  "relative_url": "/v1/webhooks/incoming/Y2lzY29zcGFyazovL3VzL1dFQkhPT0svYTA2NGExYmEtNmI5MC00MjM3LThhNzUtZTkxOTUwYTRkMjRl",
+                  "runtime_user": {
+                    "override_target_runtime_user": false,
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo"
+                  }
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01HWL15PITO1A3ZlPFOqO9P0DOtNEGqnhPh",
+                "name": "Execute Terminal Command(s)",
+                "title": "Terminate Gitlab Pipeline",
+                "type": "terminal.command",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "command_timeout": 60,
+                  "commands": "sudo gitlab-runner stop\nsudo gitlab-runner start\n",
+                  "continue_on_failure": false,
+                  "display_name": "Terminate Gitlab Pipeline",
+                  "merge_commands": false,
+                  "runtime_user": {
+                    "override_target_runtime_user": true,
+                    "runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM"
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm"
+                  }
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "categories": [
+      "category_1BMfMXSnJMyt5Ihqi7rWJr5N8cf"
+    ]
+  },
+  "targets": {
+    "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm": {
+      "unique_name": "definition_target_01CH1ROSPFG3Z3Agc9zhAKjEH5QtxvZZDHm",
+      "name": "DevBox",
+      "title": "DevBox",
+      "type": "terminal.endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "default_runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM",
+        "display_name": "DevBox",
+        "host": "0.tcp.ngrok.io",
+        "port": 13006,
+        "protocol": "ssh"
+      }
+    },
+    "definition_target_01CM6ATT16RKH6SNeL7NqKdBe1kQQL39k6Y": {
+      "unique_name": "definition_target_01CM6ATT16RKH6SNeL7NqKdBe1kQQL39k6Y",
+      "name": "DevBox2",
+      "title": "DevBox2",
+      "type": "terminal.endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "default_runtime_user_id": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM",
+        "display_name": "DevBox2",
+        "host": "2.tcp.ngrok.io",
+        "port": 18191,
+        "protocol": "ssh"
+      }
+    },
+    "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo": {
+      "unique_name": "definition_target_01E9SWIC61EAU2OoAhGku7eP0kQ4f4h2kCo",
+      "name": "Teams_WebHook",
+      "title": "Teams_WebHook",
+      "type": "web-service.endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "disable_certificate_validation": true,
+        "display_name": "Teams_WebHook",
+        "host": "api.ciscospark.com",
+        "no_runtime_user": true,
+        "port": 443,
+        "protocol": "https"
+      }
+    },
+    "definition_target_01GPGS9SDM8P74gl4zFlYJHLYOJKaoIcuC8": {
+      "unique_name": "definition_target_01GPGS9SDM8P74gl4zFlYJHLYOJKaoIcuC8",
+      "name": "NSOREST",
+      "title": "NSOREST",
+      "type": "web-service.endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "default_runtime_user_id": "definition_runtime_user_01GPGS7PG68ZZ7fDs8rJrC9HKMmqngs3fqh",
+        "disable_certificate_validation": true,
+        "display_name": "NSOREST",
+        "host": "0.tcp.ngrok.io",
+        "no_runtime_user": false,
+        "port": 16820,
+        "protocol": "http"
+      }
+    }
+  },
+  "runtime_users": {
+    "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM": {
+      "unique_name": "definition_runtime_user_01CH1RE6O7H9G7c1rB77535aiyUpLhmJnpM",
+      "name": "TerminalPass",
+      "title": "TerminalPass",
+      "type": "runtime_user.terminal_password_credentials",
+      "base_type": "runtime_user",
+      "object_type": "definition_runtime_user",
+      "properties": {
+        "display_name": "TerminalPass",
+        "password": "*****",
+        "user": "*****"
+      }
+    },
+    "definition_runtime_user_01E87AOP2OBJE49oY8r2QpHFaImKXh7nNOf": {
+      "unique_name": "definition_runtime_user_01E87AOP2OBJE49oY8r2QpHFaImKXh7nNOf",
+      "name": "NSO",
+      "title": "NSO",
+      "type": "runtime_user.terminal_password_credentials",
+      "base_type": "runtime_user",
+      "object_type": "definition_runtime_user",
+      "properties": {
+        "display_name": "NSO",
+        "password": "*****",
+        "user": "*****"
+      }
+    },
+    "definition_runtime_user_01GPGS7PG68ZZ7fDs8rJrC9HKMmqngs3fqh": {
+      "unique_name": "definition_runtime_user_01GPGS7PG68ZZ7fDs8rJrC9HKMmqngs3fqh",
+      "name": "NSORest",
+      "title": "NSORest",
+      "type": "runtime_user.web-service_basic_credentials",
+      "base_type": "runtime_user",
+      "object_type": "definition_runtime_user",
+      "properties": {
+        "auth_option": "*****",
+        "basic_password": "*****",
+        "basic_username": "*****",
+        "display_name": "NSORest"
+      }
+    }
+  },
+  "variables": {
+    "variable_01E8MAX5M79KQ1neCpIPGn6mdsMEDaPhlHX": {
+      "unique_name": "variable_01E8MAX5M79KQ1neCpIPGn6mdsMEDaPhlHX",
+      "properties": {
+        "value": "vxlan-clus-test",
+        "scope": "env",
+        "name": "VXLAN-TENANT",
+        "type": "datatype.string",
+        "description": "tenant",
+        "is_required": true
+      },
+      "object_type": "variable"
+    },
+    "variable_01E8OE2XVJYL96UFMltNYv4K5TiRmjmikQ3": {
+      "unique_name": "variable_01E8OE2XVJYL96UFMltNYv4K5TiRmjmikQ3",
+      "properties": {
+        "value": "1.1.1.0/24",
+        "scope": "env",
+        "name": "TenantNetwork",
+        "type": "datatype.string",
+        "description": "network",
+        "is_required": true
+      },
+      "object_type": "variable"
+    },
+    "variable_01E8OHUSVRF8I5EuR3GksC6wZosoa8xIwK5": {
+      "unique_name": "variable_01E8OHUSVRF8I5EuR3GksC6wZosoa8xIwK5",
+      "properties": {
+        "value": "1/6",
+        "scope": "env",
+        "name": "Leaf1_Port",
+        "type": "datatype.string",
+        "description": "Leaf1_Port",
+        "is_required": true
+      },
+      "object_type": "variable"
+    },
+    "variable_01E8OI8M6NNBC0KbVkdvTek1Mm1G2ozKDP3": {
+      "unique_name": "variable_01E8OI8M6NNBC0KbVkdvTek1Mm1G2ozKDP3",
+      "properties": {
+        "value": "1/6",
+        "scope": "env",
+        "name": "Leaf2_Port",
+        "type": "datatype.string",
+        "description": "Leaf2_Port",
+        "is_required": true
+      },
+      "object_type": "variable"
+    },
+    "variable_01GQ160Y6ONMX3w6REprpgTHYF5bDVkSxJc": {
+      "unique_name": "variable_01GQ160Y6ONMX3w6REprpgTHYF5bDVkSxJc",
+      "properties": {
+        "value": "leaf1",
+        "scope": "global",
+        "name": "leaf1",
+        "type": "datatype.string",
+        "is_required": false
+      },
+      "object_type": "variable"
+    },
+    "variable_01GQ16J0F0F9J6UADRU5kJr4HQ7eTjchavv": {
+      "unique_name": "variable_01GQ16J0F0F9J6UADRU5kJr4HQ7eTjchavv",
+      "properties": {
+        "value": "leaf2",
+        "scope": "global",
+        "name": "leaf2",
+        "type": "datatype.string",
+        "is_required": false
+      },
+      "object_type": "variable"
+    },
+    "variable_01GQ16VW3PSEI06pTCNS4wl2VjjngVy2fYF": {
+      "unique_name": "variable_01GQ16VW3PSEI06pTCNS4wl2VjjngVy2fYF",
+      "properties": {
+        "value": "spine1",
+        "scope": "global",
+        "name": "spine1",
+        "type": "datatype.string",
+        "is_required": false
+      },
+      "object_type": "variable"
+    },
+    "variable_01GQ179A186V006rcaVLmSsPoDeWvhMXZBI": {
+      "unique_name": "variable_01GQ179A186V006rcaVLmSsPoDeWvhMXZBI",
+      "properties": {
+        "value": "spine2",
+        "scope": "global",
+        "name": "spine2",
+        "type": "datatype.string",
+        "is_required": false
+      },
+      "object_type": "variable"
+    }
+  }
+}
